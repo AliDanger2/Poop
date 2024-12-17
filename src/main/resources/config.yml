@@ -1,0 +1,6 @@
+poop-item: BROWN_DYE
+diarrhea-cooldown: 120
+diarrhea-block1: BROWN_CONCRETE
+diarrhea-block2: BROWN_WOOL
+hopper-pickupable: false
+poop-name: "&ePoop"
