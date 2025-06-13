@@ -59,7 +59,7 @@ public class Poop extends JavaPlugin implements Listener {
     private int maxDiarrheaCooldown = 120;
     boolean poopEnabled = true;
     boolean diarrheaEnabled = true;
-    private final Map<UUID, List<BlockSnapshot>> activeDiarrheaEvents = new HashMap<>();
+    private final Map<UUID, List<List<BlockSnapshot>>> activeDiarrheaEvents = new HashMap<>();
     private final Map<Player, Boolean> poopingEnabled = new HashMap<>();
     private final Map<Player, Boolean> diarrheaMode = new HashMap<>();
     private final Map<UUID, Long> diarrheaCooldown = new HashMap<>();
@@ -523,28 +523,32 @@ public class Poop extends JavaPlugin implements Listener {
             boolean hasNearbyDiarrhea = false;
 
 // Check for the current player's own diarrhea events first
-            List<BlockSnapshot> currentPlayerSnapshots = activeDiarrheaEvents.get(playerUUID);
-            if (currentPlayerSnapshots != null) {
-                // Revert the current player's diarrhea blocks
-                revertBlocks(currentPlayerSnapshots);
-                hasNearbyDiarrhea = true; // Set to true since we reverted our own blocks
+            List<List<BlockSnapshot>> allSnapshots = activeDiarrheaEvents.get(playerUUID);
+            if (allSnapshots != null) {
+                for (List<BlockSnapshot> snapshotList : allSnapshots) {
+                    revertBlocks(snapshotList); // Revert each snapshot set
+                }
+                hasNearbyDiarrhea = true;
             }
 
 // Now check for other players' diarrhea events
-            for (Map.Entry<UUID, List<BlockSnapshot>> entry : activeDiarrheaEvents.entrySet()) {
+            for (Map.Entry<UUID, List<List<BlockSnapshot>>> entry : activeDiarrheaEvents.entrySet()) {
                 UUID otherPlayerUUID = entry.getKey();
                 if (!otherPlayerUUID.equals(playerUUID)) {
-                    List<BlockSnapshot> snapshots = entry.getValue();
-                    for (BlockSnapshot snapshot : snapshots) {
-                        if (snapshot.location.getWorld().equals(player.getWorld()) &&
-                                snapshot.location.distance(player.getLocation()) <= 10) {
-                            revertBlocks(snapshots); // Revert other players' diarrhea blocks
-                            hasNearbyDiarrhea = true; // Set to true since we reverted other players' blocks
-                            break; // Exit the loop after reverting
+                    List<List<BlockSnapshot>> snapshotsList = entry.getValue(); // ✅ THIS LINE was missing
+                    for (List<BlockSnapshot> snapshots : snapshotsList) {
+                        for (BlockSnapshot snapshot : snapshots) {
+                            if (snapshot.location.getWorld().equals(player.getWorld()) &&
+                                    snapshot.location.distance(player.getLocation()) <= 10) {
+                                revertBlocks(snapshots); // Revert other players' diarrhea blocks
+                                hasNearbyDiarrhea = true;
+                                break; // Break inner snapshot loop
+                            }
                         }
+                        if (hasNearbyDiarrhea) break; // Break snapshotsList loop
                     }
                 }
-                if (hasNearbyDiarrhea) break; // Exit the outer loop if we reverted any blocks
+                if (hasNearbyDiarrhea) break; // Break entry loop
             }
 
 // Schedule the diarrhea explosion after 1 tick
@@ -582,12 +586,18 @@ public class Poop extends JavaPlugin implements Listener {
             launchNearbyEntities(player);
         }
         // Store the current player's diarrhea blocks
-        activeDiarrheaEvents.put(player.getUniqueId(), currentDiarrheaSnapshots);
+        activeDiarrheaEvents.computeIfAbsent(player.getUniqueId(), k -> new ArrayList<>()).add(currentDiarrheaSnapshots);
 
         // Schedule cleanup of the event after 7 seconds
         Bukkit.getScheduler().runTaskLater(this, () -> {
-            activeDiarrheaEvents.remove(player.getUniqueId()); // Remove the player's diarrhea event after 7 seconds
-            revertBlocks(currentDiarrheaSnapshots); // Restore the blocks
+            revertBlocks(currentDiarrheaSnapshots); // Always revert this specific instance
+            List<List<BlockSnapshot>> events = activeDiarrheaEvents.get(player.getUniqueId());
+            if (events != null) {
+                events.remove(currentDiarrheaSnapshots);
+                if (events.isEmpty()) {
+                    activeDiarrheaEvents.remove(player.getUniqueId());
+                }
+            }
         }, 140L); // 7 seconds (140 ticks)
     }
 
@@ -685,8 +695,11 @@ public class Poop extends JavaPlugin implements Listener {
         for (Entity entity : nearbyEntities) {
             if (entity.equals(player)) continue;
 
-            org.bukkit.util.Vector launchDirection = entity.getLocation().toVector().subtract(player.getLocation().toVector()).normalize();
-            launchDirection.setY(1.0);
+            org.bukkit.util.Vector launchDirection = entity.getLocation().toVector().subtract(player.getLocation().toVector());
+            if (launchDirection.lengthSquared() == 0 || !Double.isFinite(launchDirection.getX()) || !Double.isFinite(launchDirection.getY()) || !Double.isFinite(launchDirection.getZ())) {
+                continue;
+            }
+            launchDirection.normalize().setY(1.0);
             entity.setVelocity(launchDirection.multiply(1.5));
         }
     }
