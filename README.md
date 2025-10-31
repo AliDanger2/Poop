@@ -92,18 +92,18 @@ Check out more of my work on GitHub!
 
 <h2 align="center" style="color:#ffaa00;">💰 DONATIONS</h2>
 
-<p align="center">
-Due to being in a heavily sanctioned country,<br />
-the only form of payment I can receive is through <b>Crypto</b>.<br />
-So feel free to donate if you'd like to support my work. ❤️
-</p>
+<div align="center">
+  Due to being in a heavily sanctioned country,<br />
+  the only form of payment I can receive is through <strong>Crypto</strong>.<br />
+  So feel free to donate if you'd like to support my work. ❤️
+</div>
 
-<p align="center">
-<b>BTC:</b><br>
-<code>bc1qj0708swh02nm7d8aynvplecd8yd3l7x2pelaw2</code><br><br>
+<div align="center" style="margin-top:12px;">
+  <strong>BTC:</strong><br />
+  <code style="display:block; margin:8px auto; font-size:14px;">bc1qj0708swh02nm7d8aynvplecd8yd3l7x2pelaw2</code>
 
-<b>Ethereum:</b><br>
-<code>0x0d31fd9d8680e6620edfe3789be6357731152b9f</code>
-</p>
+  <strong>Ethereum:</strong><br />
+  <code style="display:block; margin:8px auto; font-size:14px;">0x0d31fd9d8680e6620edfe3789be6357731152b9f</code>
+</div>
 
 ---
