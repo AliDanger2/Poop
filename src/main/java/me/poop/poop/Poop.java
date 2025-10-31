@@ -534,7 +534,7 @@ public class Poop extends JavaPlugin implements Listener {
                 scale = player.getAttribute(Attribute.GENERIC_SCALE).getValue();
             }
 
-            Location poopLocation = player.getLocation().add(0.0D, 0.5D * scale, 0.0D);
+            Location poopLocation = player.getLocation().add(0.0D, 0.25D * scale, 0.0D);
             Location direction = player.getLocation();
             org.bukkit.util.Vector playerDirection = direction.getDirection();
 
@@ -704,7 +704,7 @@ public class Poop extends JavaPlugin implements Listener {
                     if (player.getAttribute(Attribute.GENERIC_SCALE) != null) {
                         scale = player.getAttribute(Attribute.GENERIC_SCALE).getValue();
                     }
-                    Location poopLocation = player.getLocation().add(0.0D, 0.5D * scale, 0.0D);
+                    Location poopLocation = player.getLocation().add(0.0D, 0.25D * scale, 0.0D);
                     ItemStack poop = new ItemStack(poopItem, 1);
                     ItemMeta meta = poop.getItemMeta();
                     if (meta != null) {
