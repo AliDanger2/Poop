@@ -4,3 +4,5 @@ diarrhea-block1: BROWN_CONCRETE
 diarrhea-block2: BROWN_WOOL
 hopper-pickupable: false
 poop-name: "&ePoop"
+plunge-cooldown: 60
+plunge-strength: 2.0

@@ -46,6 +46,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.StringUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class Poop extends JavaPlugin implements Listener {
     private String poopName;
@@ -57,14 +58,20 @@ public class Poop extends JavaPlugin implements Listener {
     private final Map<UUID, Integer> pendingCooldowns = new HashMap<>(); // Track pending cooldown changes
     private final Map<UUID, Boolean> messageCooldown = new HashMap<>(); // Track if the message was sent recently
     private int maxDiarrheaCooldown = 120;
+    private int maxPlungeCooldown = 60;
     boolean poopEnabled = true;
     boolean diarrheaEnabled = true;
+    boolean plungeEnabled = true;
     private final Map<UUID, List<List<BlockSnapshot>>> activeDiarrheaEvents = new HashMap<>();
     private final Map<Player, Boolean> poopingEnabled = new HashMap<>();
     private final Map<Player, Boolean> diarrheaMode = new HashMap<>();
+    private final Map<Player, Boolean> plungeMode = new HashMap<>();
     private final Map<UUID, Long> diarrheaCooldown = new HashMap<>();
+    private final Map<UUID, Long> plungeCooldown = new HashMap<>();
     private final Map<UUID, Integer> poopCounts = new HashMap<>(); // Poop tracker
     private static final int LEADERBOARD_ENTRIES_PER_PAGE = 10; // Entries per leaderboard page
+    private final Map<UUID, Integer> pendingPlungeCooldowns = new HashMap<>();
+    private double plungeStrength = 2.0;
 
     @Override
     public void onEnable() {
@@ -73,6 +80,8 @@ public class Poop extends JavaPlugin implements Listener {
         loadPoopItem();
         loadPoopName();
         loadDiarrheaCooldown();
+        loadPlungeCooldown();
+        loadPlungeStrength();
         loadHopperPickupable();
         Bukkit.getPluginManager().registerEvents(this, this);
         Objects.requireNonNull(getCommand("pa")).setExecutor((sender, command, label, args) -> {
@@ -83,7 +92,7 @@ public class Poop extends JavaPlugin implements Listener {
                 }
 
                 if (args.length == 0) {
-                    player.sendMessage(ChatColor.YELLOW + "Usage: /pa <toggle_poop | poop_item | poop_name | hopper_pickupable | toggle_diarrhea | diarrhea_cooldown | diarrhea_safe_fall>");
+                    player.sendMessage(ChatColor.YELLOW + "Usage: /pa <toggle_poop | poop_item | poop_name | hopper_pickupable | toggle_diarrhea | diarrhea_cooldown | diarrhea_safe_fall | toggle_plunge | plunge_cooldown | plunge_strength | diarrhea_block1 | diarrhea_block2>");
                     return true;
                 }
 
@@ -170,6 +179,50 @@ public class Poop extends JavaPlugin implements Listener {
                                 (isEnabled ? ChatColor.RED + "disabled." : ChatColor.GREEN + "enabled."));
                         break;
 
+                    case "toggle_plunge":
+                        plungeEnabled = !plungeEnabled;
+                        player.sendMessage(ChatColor.YELLOW + "Plunge has been " + (plungeEnabled ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
+                        break;
+
+                    case "plunge_cooldown":
+                        if (args.length < 2) {
+                            player.sendMessage(ChatColor.YELLOW + "Usage: /pa plunge_cooldown <seconds>");
+                            return true;
+                        }
+                        try {
+                            int newCooldown = Integer.parseInt(args[1]);
+                            if (newCooldown < 7) {
+                                player.sendMessage(ChatColor.RED + "WARNING! " + ChatColor.YELLOW +
+                                        "If the cooldown is less than 7 seconds many issues will happen such as blocks not reverting back normally and more so be sure of what you're doing! " +
+                                        "If you want to proceed write /pa confirm in the chat.");
+                                pendingPlungeCooldowns.put(player.getUniqueId(), newCooldown);
+                            } else {
+                                maxPlungeCooldown = newCooldown;
+                                getConfig().set("plunge-cooldown", newCooldown);
+                                saveConfig();
+                                player.sendMessage(ChatColor.GREEN + "Plunge cooldown has been set to " + newCooldown + " seconds.");
+                            }
+                        } catch (NumberFormatException e) {
+                            player.sendMessage(ChatColor.RED + "Please enter a valid number.");
+                        }
+                        break;
+
+                    case "plunge_strength":
+                        if (args.length < 2) {
+                            player.sendMessage(ChatColor.YELLOW + "Usage: /pa plunge_strength <value>");
+                            return true;
+                        }
+                        try {
+                            double newStrength = Double.parseDouble(args[1]);
+                            plungeStrength = newStrength;
+                            getConfig().set("plunge-strength", newStrength);
+                            saveConfig();
+                            player.sendMessage(ChatColor.GREEN + "Plunge strength has been set to " + newStrength);
+                        } catch (NumberFormatException e) {
+                            player.sendMessage(ChatColor.RED + "Please enter a valid number.");
+                        }
+                        break;
+
                     case "diarrhea_block1":
                         if (args.length < 2) {
                             player.sendMessage(ChatColor.YELLOW + "Usage: /pa diarrhea_block1 <block>");
@@ -192,10 +245,19 @@ public class Poop extends JavaPlugin implements Listener {
 
                             maxDiarrheaCooldown = pendingCooldowns.get(player.getUniqueId());
 
+                            getConfig().set("diarrhea-cooldown", maxDiarrheaCooldown);
+                            saveConfig();
+
                             player.sendMessage(ChatColor.GREEN + "Diarrhea cooldown has been set to " + maxDiarrheaCooldown + " seconds.");
 
                             pendingCooldowns.remove(player.getUniqueId()); // Remove the pending cooldown
 
+                        } else if (pendingPlungeCooldowns.containsKey(player.getUniqueId())) {
+                            maxPlungeCooldown = pendingPlungeCooldowns.get(player.getUniqueId());
+                            getConfig().set("plunge-cooldown", maxPlungeCooldown);
+                            saveConfig();
+                            player.sendMessage(ChatColor.GREEN + "Plunge cooldown has been set to " + maxPlungeCooldown + " seconds.");
+                            pendingPlungeCooldowns.remove(player.getUniqueId());
                         } else {
 
                             player.sendMessage(ChatColor.RED + "There is no pending cooldown change to confirm.");
@@ -205,7 +267,7 @@ public class Poop extends JavaPlugin implements Listener {
                         return true;
 
                     default:
-                        player.sendMessage(ChatColor.YELLOW + "Usage: /pa <toggle_poop | poop_item | poop_name | hopper_pickupable | toggle_diarrhea | diarrhea_cooldown | diarrhea_safe_fall>");
+                        player.sendMessage(ChatColor.YELLOW + "Usage: /pa <toggle_poop | poop_item | poop_name | hopper_pickupable | toggle_diarrhea | diarrhea_cooldown | diarrhea_safe_fall | toggle_plunge | plunge_cooldown | plunge_strength | diarrhea_block1 | diarrhea_block2>");
                         break;
                 }
             }
@@ -224,6 +286,10 @@ public class Poop extends JavaPlugin implements Listener {
                     diarrheaMode.put(player, false);
                 }
 
+                if (plungeMode.getOrDefault(player, false)) {
+                    plungeMode.put(player, false);
+                }
+
                 player.sendMessage("Pooping has been " + (isEnabled ? ChatColor.RED + "disabled." : ChatColor.GREEN + "enabled."));
             }
             return true;
@@ -237,7 +303,28 @@ public class Poop extends JavaPlugin implements Listener {
                     poopingEnabled.put(player, false);
                 }
 
+                if (plungeMode.getOrDefault(player, false)) {
+                    plungeMode.put(player, false);
+                }
+
                 player.sendMessage("Diarrhea mode has been " + (isDiarrheaEnabled ? ChatColor.RED + "disabled." : ChatColor.GREEN + "enabled."));
+            }
+            return true;
+        });
+        Objects.requireNonNull(getCommand("plunge")).setExecutor((sender, command, label, args) -> {
+            if (sender instanceof Player player) {
+                boolean isPlungeEnabled = plungeMode.getOrDefault(player, false);
+                plungeMode.put(player, !isPlungeEnabled);
+
+                if (poopingEnabled.getOrDefault(player, false)) {
+                    poopingEnabled.put(player, false);
+                }
+
+                if (diarrheaMode.getOrDefault(player, false)) {
+                    diarrheaMode.put(player, false);
+                }
+
+                player.sendMessage("Plunge mode has been " + (isPlungeEnabled ? ChatColor.RED + "disabled." : ChatColor.GREEN + "enabled."));
             }
             return true;
         });
@@ -362,6 +449,7 @@ public class Poop extends JavaPlugin implements Listener {
                 return StringUtil.copyPartialMatches(args[0], Arrays.asList(
                         "toggle_poop", "poop_item", "poop_name", "hopper_pickupable",
                         "toggle_diarrhea", "diarrhea_cooldown", "diarrhea_safe_fall",
+                        "toggle_plunge", "plunge_cooldown", "plunge_strength",
                         "diarrhea_block1", "diarrhea_block2"
                 ), new ArrayList<>());
             } else if (args.length == 2 && (args[0].equalsIgnoreCase("diarrhea_block1") || args[0].equalsIgnoreCase("diarrhea_block2") || args[0].equalsIgnoreCase("poop_item"))) {
@@ -411,6 +499,14 @@ public class Poop extends JavaPlugin implements Listener {
 
     private void loadDiarrheaCooldown() {
         maxDiarrheaCooldown = getConfig().getInt("diarrhea-cooldown", 120); // Default to 120 seconds
+    }
+
+    private void loadPlungeCooldown() {
+        maxPlungeCooldown = getConfig().getInt("plunge-cooldown", 60); // Default to 60 seconds
+    }
+
+    private void loadPlungeStrength() {
+        plungeStrength = getConfig().getDouble("plunge-strength", 2.0); // Default to 2.0
     }
 
     @EventHandler
@@ -535,7 +631,7 @@ public class Poop extends JavaPlugin implements Listener {
             for (Map.Entry<UUID, List<List<BlockSnapshot>>> entry : activeDiarrheaEvents.entrySet()) {
                 UUID otherPlayerUUID = entry.getKey();
                 if (!otherPlayerUUID.equals(playerUUID)) {
-                    List<List<BlockSnapshot>> snapshotsList = entry.getValue(); // ✅ THIS LINE was missing
+                    List<List<BlockSnapshot>> snapshotsList = entry.getValue(); // THIS LINE was missing
                     for (List<BlockSnapshot> snapshots : snapshotsList) {
                         for (BlockSnapshot snapshot : snapshots) {
                             if (snapshot.location.getWorld().equals(player.getWorld()) &&
@@ -557,6 +653,79 @@ public class Poop extends JavaPlugin implements Listener {
                 currentDiarrheaSnapshots.addAll(changeGroundBlocks(player)); // Change ground blocks for the new diarrhea event
                 executeDiarrheaExplosion(player, currentDiarrheaSnapshots);
             }, 1L); // Delay the explosion by 1 tick
+        }
+    }
+
+    @EventHandler
+    public void onPlayerSneakForPlunge(PlayerToggleSneakEvent event) {
+        Player player = event.getPlayer();
+
+        if (!plungeEnabled) {
+            return;
+        }
+
+        if (event.isSneaking() && plungeMode.getOrDefault(player, false)) {
+            UUID playerUUID = player.getUniqueId();
+            long currentTime = System.currentTimeMillis();
+            long lastPlungeTime = plungeCooldown.getOrDefault(playerUUID, 0L);
+
+            // Check if the cooldown has passed
+            if (currentTime - lastPlungeTime < maxPlungeCooldown * 1000L) {
+                long remainingTime = (maxPlungeCooldown * 1000L - (currentTime - lastPlungeTime)) / 1000L;
+
+                // Check if the message has been sent recently
+                if (!messageCooldown.getOrDefault(playerUUID, false)) {
+                    player.sendMessage(ChatColor.RED + "Plunge is currently on cooldown. Please wait " + ChatColor.GOLD + remainingTime + ChatColor.RED + " seconds.");
+                    messageCooldown.put(playerUUID, true);
+                    Bukkit.getScheduler().runTaskLater(this, () -> {
+                        messageCooldown.put(playerUUID, false);
+                    }, 20L);
+                }
+                return;
+            }
+
+            plungeCooldown.put(playerUUID, currentTime);
+
+            // Lunge forward
+            org.bukkit.util.Vector direction = player.getLocation().getDirection();
+            player.setVelocity(direction.multiply(plungeStrength));
+
+            // Spawn poop trail
+            int lungePoopCount = (int) (5 * plungeStrength);
+            new BukkitRunnable() {
+                int count = 0;
+                @Override
+                public void run() {
+                    if (count >= lungePoopCount || !player.isOnline() || player.isDead()) {
+                        cancel();
+                        return;
+                    }
+                    double scale = 1.0D;
+                    if (player.getAttribute(Attribute.GENERIC_SCALE) != null) {
+                        scale = player.getAttribute(Attribute.GENERIC_SCALE).getValue();
+                    }
+                    Location poopLocation = player.getLocation().add(0.0D, 0.5D * scale, 0.0D);
+                    ItemStack poop = new ItemStack(poopItem, 1);
+                    ItemMeta meta = poop.getItemMeta();
+                    if (meta != null) {
+                        meta.setDisplayName(ChatColor.RESET + poopName);
+                        meta.getPersistentDataContainer().set(new NamespacedKey(Poop.this, "poop_tag"), PersistentDataType.BYTE, (byte) 1);
+                        poop.setItemMeta(meta);
+                    }
+                    Item droppedPoop = player.getWorld().dropItem(poopLocation, poop);
+                    droppedPoop.setPickupDelay(Integer.MAX_VALUE);
+                    org.bukkit.util.Vector poopVelocity = player.getLocation().getDirection().multiply(-0.3);
+                    droppedPoop.setVelocity(poopVelocity);
+                    for (Player nearbyPlayer : player.getWorld().getPlayers()) {
+                        if (nearbyPlayer.getLocation().distanceSquared(player.getLocation()) <= 100) {
+                            nearbyPlayer.playSound(player.getLocation(), Sound.BLOCK_LAVA_POP, 1.0f, 1.0f);
+                        }
+                    }
+                    Bukkit.getScheduler().runTaskLater(Poop.this, droppedPoop::remove, 40L);
+                    poopCounts.put(playerUUID, poopCounts.getOrDefault(playerUUID, 0) + 1);
+                    count++;
+                }
+            }.runTaskTimer(this, 0L, 1L);
         }
     }
 

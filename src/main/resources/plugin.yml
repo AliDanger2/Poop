@@ -1,5 +1,5 @@
 name: poop
-version: '2.5'
+version: '2.6'
 main: me.poop.poop.Poop
 api-version: '1.21.5'
 
@@ -17,7 +17,10 @@ commands:
     description: Admin commands.
     usage: /pa
     permission: poop.admin
+  plunge:
+    description: Toggle plunge mode.
+    usage: /plunge
 permissions:
   poop.admin:
-    description: /pa <toggle_poop | poop_item | poop_name | hopper_pickupable | toggle_diarrhea | diarrhea_cooldown | diarrhea_safe_fall>
+    description: /pa <toggle_poop | poop_item | poop_name | hopper_pickupable | toggle_diarrhea | diarrhea_cooldown | diarrhea_safe_fall | toggle_plunge | plunge_cooldown | plunge_strength | diarrhea_block1 | diarrhea_block2>
     default: op
