@@ -99,7 +99,7 @@ Check out more of my work on GitHub!
 </div>
 
 <div align="center" style="margin-top:12px;">
-  <strong>BTC:</strong><br />
+  <strong>Bitcoin:</strong><br />
   <code style="display:block; margin:8px auto; font-size:14px;">bc1qj0708swh02nm7d8aynvplecd8yd3l7x2pelaw2</code>
 
   <strong>Ethereum:</strong><br />
