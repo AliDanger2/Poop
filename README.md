@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong><span style="font-size:40px; color:#ff6600;">Poop Plugin 2.7</span></strong><br>
+  <strong><span style="font-size:40px; color:#ff6600;">Poop Plugin 2.8</span></strong><br>
   <i>The funniest lightweight plugin for your Minecraft server!</i><br>
   <span style="font-size:12px;">Created by <a href="https://github.com/AliDanger2">Ali_Danger</a></span>
 </p>
@@ -31,9 +31,10 @@
 
 ---
 
-<p align="center"><strong><span style="color:#00ccff;">NEW IN VERSION 2.7</span></strong></p>
+<p align="center"><strong><span style="color:#00ccff;">NEW IN VERSION 2.8</span></strong></p>
 
-- Minor Adjustment for where the poop spawns.  
+- Major code refactoring.
+- Better poop spawn location.
 
 ---
 
@@ -75,11 +76,11 @@ Check out more of my work on GitHub!
 
 <p align="center"><strong><span style="color:#ffcc00;">CHANGELOG</span></strong></p>
 
-- **v2.7** - Minor Adjustment for where the poop spawns.  
-- **v2.6** - Added /plunge ability + poop trail  
-- **v2.5** - Fixed block revert bug  
-- **v2.4** - Better diarrhea mechanics  
-- **v2.3** - Added safe fall for diarrhea mode  
+- **v2.8** - Major code refactoring + Better poop spawn location.
+- **v2.7** - Minor Adjustment for where the poop spawns.
+- **v2.6** - Added /plunge ability + poop trail
+- **v2.5** - Fixed block revert bug
+- **v2.4** - Better diarrhea mechanics
 
 ---
 
