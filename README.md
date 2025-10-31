@@ -6,3 +6,9 @@ A poop plugin i guess<br />
 /plunge - lunge but poopy<br />
 /pa - admin commands<br />
 /toppoop - poop leaderboard
+# Donations:
+Due to being in a heavily sanctioned country
+the only form of payment i can receive is through Crypto
+So feel free to donate all you want.
+BTC    :  ``bc1qj0708swh02nm7d8aynvplecd8yd3l7x2pelaw2``
+Ether  :  ``0x0d31fd9d8680e6620edfe3789be6357731152b9f``
