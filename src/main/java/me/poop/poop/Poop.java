@@ -1,8 +1,13 @@
 package me.poop.poop;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerCommandSendEvent;
+import org.bukkit.entity.Player;
+import java.util.Collection;
 
-public class Poop extends JavaPlugin {
+public class Poop extends JavaPlugin implements Listener {
     private PoopManager poopManager;
     private CommandManager commandManager;
     private EventManager eventManager;
@@ -27,11 +32,35 @@ public class Poop extends JavaPlugin {
 
         new UpdateChecker(this).checkForUpdates();
 
+        getServer().getPluginManager().registerEvents(this, this);
+
         getLogger().info("Poop plugin enabled. You can now poop after shifting!");
     }
 
     @Override
     public void onDisable() {
         dataManager.savePoopData();
+    }
+
+    @EventHandler
+    public void onCommandSend(PlayerCommandSendEvent event) {
+        Player player = event.getPlayer();
+        Collection<String> commands = event.getCommands();
+
+        if (!player.hasPermission("poop.poop")) {
+            commands.remove("poop");
+        }
+        if (!player.hasPermission("poop.diarrhea")) {
+            commands.remove("diarrhea");
+        }
+        if (!player.hasPermission("poop.plunge")) {
+            commands.remove("plunge");
+        }
+        if (!player.hasPermission("poop.toppoop")) {
+            commands.remove("toppoop");
+        }
+        if (!player.hasPermission("poop.admin")) {
+            commands.remove("pa");
+        }
     }
 }

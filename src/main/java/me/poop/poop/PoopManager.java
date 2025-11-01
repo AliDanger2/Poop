@@ -37,6 +37,11 @@ public class PoopManager {
     }
 
     public void togglePooping(Player player) {
+        if (!player.hasPermission("poop.poop")) {
+            player.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            return;
+        }
+
         boolean isEnabled = poopingEnabled.getOrDefault(player, false);
         poopingEnabled.put(player, !isEnabled);
 
@@ -52,6 +57,11 @@ public class PoopManager {
     }
 
     public void toggleDiarrhea(Player player) {
+        if (!player.hasPermission("poop.diarrhea")) {
+            player.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            return;
+        }
+
         boolean isDiarrheaEnabled = diarrheaMode.getOrDefault(player, false);
         diarrheaMode.put(player, !isDiarrheaEnabled);
 
@@ -67,6 +77,11 @@ public class PoopManager {
     }
 
     public void togglePlunge(Player player) {
+        if (!player.hasPermission("poop.plunge")) {
+            player.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            return;
+        }
+
         boolean isPlungeEnabled = plungeMode.getOrDefault(player, false);
         plungeMode.put(player, !isPlungeEnabled);
 
@@ -82,6 +97,10 @@ public class PoopManager {
     }
 
     public void executePoop(Player player) {
+        if (!player.hasPermission("poop.poop")) {
+            return;
+        }
+
         if (!configManager.isPoopEnabled()) return;
 
         double scale = 1.0D;
@@ -127,6 +146,10 @@ public class PoopManager {
     }
 
     public void executeDiarrhea(Player player) {
+        if (!player.hasPermission("poop.diarrhea")) {
+            return;
+        }
+
         if (!configManager.isDiarrheaEnabled()) return;
 
         UUID playerUUID = player.getUniqueId();
@@ -211,6 +234,10 @@ public class PoopManager {
     }
 
     public void executePlunge(Player player) {
+        if (!player.hasPermission("poop.plunge")) {
+            return;
+        }
+
         if (!configManager.isPlungeEnabled()) return;
 
         UUID playerUUID = player.getUniqueId();

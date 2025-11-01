@@ -147,7 +147,7 @@ public class CommandManager {
                         int newCooldown = Integer.parseInt(args[1]);
                         if (newCooldown < 7) {
                             player.sendMessage(ChatColor.RED + "WARNING! " + ChatColor.YELLOW +
-                                    "If the cooldown is less than 7 seconds many issues will happen such as blocks not reverting back normally and more so be sure of what you're doing! " +
+                                    "If the cooldown is less than 7 seconds many issues will happen such as lag and many other things so be sure of what you're doing! " +
                                     "If you want to proceed write /pa confirm in the chat.");
                             pendingPlungeCooldowns.put(player.getUniqueId(), newCooldown);
                         } else {

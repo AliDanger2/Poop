@@ -62,6 +62,11 @@ public class DataManager {
     }
 
     public void showLeaderboard(Player player, int page) {
+        if (!player.hasPermission("poop.toppoop")) {
+            player.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            return;
+        }
+
         List<Map.Entry<UUID, Integer>> sortedEntries = poopCounts.entrySet()
                 .stream()
                 .sorted((a, b) -> b.getValue().compareTo(a.getValue()))

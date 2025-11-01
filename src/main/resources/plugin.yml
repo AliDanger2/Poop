@@ -1,5 +1,5 @@
 name: poop
-version: '2.8'
+version: '2.9'
 main: me.poop.poop.Poop
 api-version: '1.21.5'
 
