@@ -21,6 +21,7 @@ public class PoopManager {
     private final DataManager dataManager;
     private final BlockManager blockManager;
 
+    private final Map<String, String> cachedExpressions = new HashMap<>();
     private final Map<Player, Boolean> diarrheaSafeFall = new HashMap<>();
     private final Map<Player, Boolean> poopingEnabled = new HashMap<>();
     private final Map<Player, Boolean> diarrheaMode = new HashMap<>();
@@ -267,7 +268,7 @@ public class PoopManager {
 
     private void spawnPlungePoopTrail(Player player) {
         UUID playerUUID = player.getUniqueId();
-        int lungePoopCount = (int) (5 * configManager.getPlungeStrength());
+        int lungePoopCount = calculatePlungePoopCount();
 
         new BukkitRunnable() {
             int count = 0;
@@ -313,6 +314,148 @@ public class PoopManager {
                 count++;
             }
         }.runTaskTimer(plugin, 0L, 1L);
+    }
+
+    private int calculatePlungePoopCount() {
+        String expression = configManager.getPlungePoopTrailExpression();
+        double strength = configManager.getPlungeStrength();
+        expression = expression.replace("strength", String.valueOf(strength));
+
+        try {
+            double result = evaluateExpression(expression);
+            return (int) result;
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to evaluate plunge poop trail expression: " + e.getMessage());
+            return (int) (5 * strength); // Default fallback
+        }
+    }
+
+    private double evaluateExpression(String expression) {
+        if (expression == null) throw new IllegalArgumentException("Expression is null");
+        expression = expression.replaceAll("\\s+", ""); // remove whitespace
+
+        // Resolve parentheses by repeatedly computing the innermost (...) and replacing it
+        while (expression.contains("(")) {
+            int open = expression.lastIndexOf('('); // innermost '('
+            if (open == -1) break; // safety
+            int close = expression.indexOf(')', open);
+            if (close == -1) throw new IllegalArgumentException("Unbalanced parentheses");
+            String inner = expression.substring(open + 1, close);
+            double innerVal = evaluateExpression(inner); // recursive
+            // replace the parentheses (including them) with the computed numeric value
+            expression = expression.substring(0, open) + doubleToString(innerVal) + expression.substring(close + 1);
+        }
+
+        // Now expression has no parentheses. Evaluate * / first, then + -
+        return evaluateNoParentheses(expression);
+    }
+
+    // Convert double to string without scientific notation; keep decimal when needed.
+    private String doubleToString(double v) {
+        if (v == (long) v) {
+            return Long.toString((long) v);
+        } else {
+            return Double.toString(v);
+        }
+    }
+
+    // Evaluate an expression string that contains NO parentheses.
+    // Steps: tokenize into numbers/operators, handle unary minus, process */ left-to-right, then +- left-to-right.
+    private double evaluateNoParentheses(String expr) {
+        if (expr == null || expr.isEmpty()) throw new IllegalArgumentException("Empty expression");
+
+        List<Double> numbers = new ArrayList<>();
+        List<Character> ops = new ArrayList<>();
+
+        int i = 0;
+        boolean expectingNumber = true; // true at start or after an operator
+
+        while (i < expr.length()) {
+            char c = expr.charAt(i);
+
+            if (c == '+' || c == '-' || c == '*' || c == '/') {
+                // handle unary minus (or unary plus) as part of number
+                if (expectingNumber && (c == '+' || c == '-')) {
+                    // parse sign with the following number
+                    int j = i + 1;
+                    StringBuilder numSb = new StringBuilder();
+                    numSb.append(c); // sign
+                    // allow digits and decimal point
+                    boolean foundDigit = false;
+                    while (j < expr.length() && (Character.isDigit(expr.charAt(j)) || expr.charAt(j) == '.')) {
+                        numSb.append(expr.charAt(j));
+                        foundDigit = true;
+                        j++;
+                    }
+                    if (!foundDigit) {
+                        throw new IllegalArgumentException("Invalid unary operator usage at position " + i + " in " + expr);
+                    }
+                    double val = Double.parseDouble(numSb.toString());
+                    numbers.add(val);
+                    i = j;
+                    expectingNumber = false;
+                    continue;
+                } else {
+                    // binary operator
+                    ops.add(c);
+                    i++;
+                    expectingNumber = true;
+                    continue;
+                }
+            } else if (Character.isDigit(c) || c == '.') {
+                int j = i;
+                StringBuilder numSb = new StringBuilder();
+                while (j < expr.length() && (Character.isDigit(expr.charAt(j)) || expr.charAt(j) == '.')) {
+                    numSb.append(expr.charAt(j));
+                    j++;
+                }
+                double val = Double.parseDouble(numSb.toString());
+                numbers.add(val);
+                i = j;
+                expectingNumber = false;
+                continue;
+            } else {
+                throw new IllegalArgumentException("Invalid character in expression: " + c);
+            }
+        }
+
+        if (numbers.size() == 0) throw new IllegalArgumentException("No numbers in expression");
+
+        // First pass: handle * and / left-to-right, by collapsing numbers and ops lists.
+        List<Double> numbersPass = new ArrayList<>();
+        List<Character> opsPass = new ArrayList<>();
+
+        numbersPass.add(numbers.get(0));
+        for (int k = 0; k < ops.size(); k++) {
+            char op = ops.get(k);
+            double nextNum = numbers.get(k + 1);
+            if (op == '*' || op == '/') {
+                double prev = numbersPass.remove(numbersPass.size() - 1);
+                double res = (op == '*') ? (prev * nextNum) : safeDivide(prev, nextNum);
+                numbersPass.add(res);
+            } else {
+                // + or - : defer to next pass
+                opsPass.add(op);
+                numbersPass.add(nextNum);
+            }
+        }
+
+        // Second pass: handle + and - left-to-right
+        double result = numbersPass.get(0);
+        for (int k = 0; k < opsPass.size(); k++) {
+            char op = opsPass.get(k);
+            double num = numbersPass.get(k + 1);
+            if (op == '+') result = result + num;
+            else if (op == '-') result = result - num;
+            else throw new IllegalArgumentException("Unexpected operator in second pass: " + op);
+        }
+
+        return result;
+    }
+
+    private double safeDivide(double a, double b) {
+        if (b == 0.0) throw new ArithmeticException("Division by zero");
+        return a / b;
     }
 
     private void spawnBrownDyeCircle(Player player) {

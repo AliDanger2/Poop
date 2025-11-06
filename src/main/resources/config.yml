@@ -6,3 +6,4 @@ hopper-pickupable: false
 poop-name: "&ePoop"
 plunge-cooldown: 60
 plunge-strength: 2.0
+plunge-poop-trail: "5 * strength"

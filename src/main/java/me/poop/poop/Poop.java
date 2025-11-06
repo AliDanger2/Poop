@@ -21,8 +21,8 @@ public class Poop extends JavaPlugin implements Listener {
         this.dataManager = new DataManager(this);
         this.blockManager = new BlockManager(this, configManager);
         this.poopManager = new PoopManager(this, configManager, dataManager, blockManager);
-        this.eventManager = new EventManager(this, poopManager, configManager, blockManager);
         this.commandManager = new CommandManager(this, poopManager, configManager, dataManager, blockManager);
+        this.eventManager = new EventManager(this, poopManager, configManager, blockManager, commandManager);
 
         configManager.loadConfig();
         dataManager.loadPoopData();

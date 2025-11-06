@@ -20,6 +20,7 @@ public class ConfigManager {
     private boolean poopEnabled;
     private boolean diarrheaEnabled;
     private boolean plungeEnabled;
+    private String plungePoopTrailExpression;
 
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -29,12 +30,14 @@ public class ConfigManager {
     public void loadConfig() {
         plugin.saveDefaultConfig();
         initializeDefaultDiarrheaBlocks();
+        initializeDefaultPlungePoopTrail();
 
         poopName = ChatColor.translateAlternateColorCodes('&', config.getString("poop-name", "Poop"));
         hopperPickupable = config.getBoolean("hopper-pickupable", true);
         maxDiarrheaCooldown = config.getInt("diarrhea-cooldown", 120);
         maxPlungeCooldown = config.getInt("plunge-cooldown", 60);
         plungeStrength = config.getDouble("plunge-strength", 2.0);
+        plungePoopTrailExpression = config.getString("plunge-poop-trail", "5 * strength");
         poopEnabled = true;
         diarrheaEnabled = true;
         plungeEnabled = true;
@@ -59,6 +62,13 @@ public class ConfigManager {
             config.set("diarrhea-block2", Material.BROWN_WOOL.name());
         }
         plugin.saveConfig();
+    }
+
+    private void initializeDefaultPlungePoopTrail() {
+        if (!config.contains("plunge-poop-trail")) {
+            config.set("plunge-poop-trail", "5 * strength");
+            plugin.saveConfig();
+        }
     }
 
     private Material getConfigMaterial(String configKey, Material defaultMaterial) {
@@ -97,6 +107,7 @@ public class ConfigManager {
     public boolean isPoopEnabled() { return poopEnabled; }
     public boolean isDiarrheaEnabled() { return diarrheaEnabled; }
     public boolean isPlungeEnabled() { return plungeEnabled; }
+    public String getPlungePoopTrailExpression() { return plungePoopTrailExpression; }
 
     public void setPoopName(String poopName) {
         this.poopName = poopName;
@@ -126,6 +137,11 @@ public class ConfigManager {
     public void setPlungeStrength(double plungeStrength) {
         this.plungeStrength = plungeStrength;
         config.set("plunge-strength", plungeStrength);
+        plugin.saveConfig();
+    }
+    public void setPlungePoopTrailExpression(String expression) {
+        this.plungePoopTrailExpression = expression;
+        config.set("plunge-poop-trail", expression);
         plugin.saveConfig();
     }
     public void setPoopEnabled(boolean poopEnabled) { this.poopEnabled = poopEnabled; }
