@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://i.imgur.com/nJXkIWL.png" alt="Poop Plugin Banner">
+  <img src="https://i.imgur.com/V3UMR6F.png" alt="Poop Plugin Banner">
 </p>
 
 <p align="center">
