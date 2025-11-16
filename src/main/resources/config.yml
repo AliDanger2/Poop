@@ -1,9 +1,11 @@
 poop-item: BROWN_DYE
+diarrhea-item: BROWN_DYE
+plunge-item: BROWN_DYE
 diarrhea-cooldown: 120
+plunge-cooldown: 60
 diarrhea-block1: BROWN_CONCRETE
 diarrhea-block2: BROWN_WOOL
-hopper-pickupable: false
-poop-name: "&ePoop"
-plunge-cooldown: 60
 plunge-strength: 2.0
 plunge-poop-trail: "5 * strength"
+hopper-pickupable: false
+poop-name: "&ePoop"

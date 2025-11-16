@@ -1,5 +1,5 @@
 name: poop
-version: '3.0'
+version: '3.1'
 main: me.poop.poop.Poop
 api-version: '1.21'
 
@@ -36,3 +36,72 @@ permissions:
   poop.admin:
     description: Full admin access to all poop commands and configurations
     default: op
+  poop.admin.toggle_poop:
+    description: Allows toggling poop globally
+    default: op
+  poop.admin.poop_name:
+    description: Allows changing poop name
+    default: op
+  poop.admin.poop_item:
+    description: Allows changing poop item
+    default: op
+  poop.admin.hopper_pickupable:
+    description: Allows toggling hopper pickup
+    default: op
+  poop.admin.toggle_diarrhea:
+    description: Allows toggling diarrhea globally
+    default: op
+  poop.admin.diarrhea_cooldown:
+    description: Allows changing diarrhea cooldown
+    default: op
+  poop.admin.diarrhea_safe_fall:
+    description: Allows toggling diarrhea safe fall
+    default: op
+  poop.admin.toggle_plunge:
+    description: Allows toggling plunge globally
+    default: op
+  poop.admin.plunge_cooldown:
+    description: Allows changing plunge cooldown
+    default: op
+  poop.admin.plunge_strength:
+    description: Allows changing plunge strength
+    default: op
+  poop.admin.plunge_poop_trail:
+    description: Allows changing plunge poop trail expression
+    default: op
+  poop.admin.diarrhea_block1:
+    description: Allows changing diarrhea block 1
+    default: op
+  poop.admin.diarrhea_block2:
+    description: Allows changing diarrhea block 2
+    default: op
+  poop.admin.diarrhea_item:
+    description: Allows changing diarrhea item
+    default: op
+  poop.admin.plunge_item:
+    description: Allows changing plunge item
+    default: op
+  poop.*:
+    description: Grants all poop permissions
+    default: op
+    children:
+      poop.poop: true
+      poop.diarrhea: true
+      poop.plunge: true
+      poop.toppoop: true
+      poop.admin: true
+      poop.admin.toggle_poop: true
+      poop.admin.poop_name: true
+      poop.admin.poop_item: true
+      poop.admin.hopper_pickupable: true
+      poop.admin.toggle_diarrhea: true
+      poop.admin.diarrhea_cooldown: true
+      poop.admin.diarrhea_safe_fall: true
+      poop.admin.toggle_plunge: true
+      poop.admin.plunge_cooldown: true
+      poop.admin.plunge_strength: true
+      poop.admin.plunge_poop_trail: true
+      poop.admin.diarrhea_block1: true
+      poop.admin.diarrhea_block2: true
+      poop.admin.diarrhea_item: true
+      poop.admin.plunge_item: true

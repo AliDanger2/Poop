@@ -30,6 +30,9 @@ public class PoopManager {
     private final Map<UUID, Long> plungeCooldown = new HashMap<>();
     private final Map<UUID, Boolean> messageCooldown = new HashMap<>();
 
+    private final Map<UUID, Set<Item>> activeItems = new HashMap<>();
+    private final Map<UUID, BukkitRunnable> activePlungeTasks = new HashMap<>();
+
     public PoopManager(Poop plugin, ConfigManager configManager, DataManager dataManager, BlockManager blockManager) {
         this.plugin = plugin;
         this.configManager = configManager;
@@ -136,13 +139,18 @@ public class PoopManager {
         droppedPoop.setPickupDelay(Integer.MAX_VALUE);
         droppedPoop.setVelocity(playerDirection.normalize().multiply(-0.3));
 
+        activeItems.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).add(droppedPoop);
+
         for (Player nearbyPlayer : player.getWorld().getPlayers()) {
             if (nearbyPlayer.getLocation().distance(player.getLocation()) <= 10) {
                 nearbyPlayer.playSound(player.getLocation(), Sound.BLOCK_LAVA_POP, 1.0f, 1.0f);
             }
         }
 
-        Bukkit.getScheduler().runTaskLater(plugin, droppedPoop::remove, 40L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            droppedPoop.remove();
+            removeActiveItem(player.getUniqueId(), droppedPoop);
+        }, 40L);
         dataManager.incrementPoopCount(player.getUniqueId());
     }
 
@@ -270,13 +278,14 @@ public class PoopManager {
         UUID playerUUID = player.getUniqueId();
         int lungePoopCount = calculatePlungePoopCount();
 
-        new BukkitRunnable() {
+        BukkitRunnable task = new BukkitRunnable() {
             int count = 0;
 
             @Override
             public void run() {
                 if (count >= lungePoopCount || !player.isOnline() || player.isDead()) {
                     cancel();
+                    activePlungeTasks.remove(playerUUID);
                     return;
                 }
 
@@ -289,7 +298,7 @@ public class PoopManager {
                 double yOffset = (scale >= 3.0) ? 0.5 * scale : 0.25 * scale;
                 Location poopLocation = player.getLocation().add(0.0D, yOffset, 0.0D);
 
-                ItemStack poop = new ItemStack(configManager.getPoopItem(), 1);
+                ItemStack poop = new ItemStack(configManager.getPlungeItem(), 1);
                 ItemMeta meta = poop.getItemMeta();
 
                 if (meta != null) {
@@ -303,17 +312,24 @@ public class PoopManager {
                 Vector poopVelocity = player.getLocation().getDirection().multiply(-0.3);
                 droppedPoop.setVelocity(poopVelocity);
 
+                activeItems.computeIfAbsent(playerUUID, k -> new HashSet<>()).add(droppedPoop);
+
                 for (Player nearbyPlayer : player.getWorld().getPlayers()) {
                     if (nearbyPlayer.getLocation().distanceSquared(player.getLocation()) <= 100) {
                         nearbyPlayer.playSound(player.getLocation(), Sound.BLOCK_LAVA_POP, 1.0f, 1.0f);
                     }
                 }
 
-                Bukkit.getScheduler().runTaskLater(plugin, droppedPoop::remove, 40L);
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    droppedPoop.remove();
+                    removeActiveItem(playerUUID, droppedPoop);
+                }, 40L);
                 dataManager.incrementPoopCount(playerUUID);
                 count++;
             }
-        }.runTaskTimer(plugin, 0L, 1L);
+        };
+        task.runTaskTimer(plugin, 0L, 1L);
+        activePlungeTasks.put(playerUUID, task);
     }
 
     private int calculatePlungePoopCount() {
@@ -469,10 +485,11 @@ public class PoopManager {
             double z = center.getZ() + Math.sin(angle);
             Location spawnLocation = new Location(world, x, center.getY() + 0.5, z);
 
-            ItemStack brownDye = new ItemStack(configManager.getPoopItem(), 1);
+            ItemStack brownDye = new ItemStack(configManager.getDiarrheaItem(), 1);
             Item item = world.dropItem(spawnLocation, brownDye);
             item.setPickupDelay(Integer.MAX_VALUE);
             spawnedItems.add(item);
+            activeItems.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).add(item);
         }
 
         dataManager.incrementPoopCount(player.getUniqueId(), 25);
@@ -482,6 +499,7 @@ public class PoopManager {
                 if (item != null && !item.isDead()) {
                     item.remove();
                 }
+                removeActiveItem(player.getUniqueId(), item);
             }
         }, 7 * 20L);
     }
@@ -527,5 +545,52 @@ public class PoopManager {
 
     public boolean hasDiarrheaSafeFall(Player player) {
         return diarrheaSafeFall.getOrDefault(player, false);
+    }
+
+    private void removeActiveItem(UUID uuid, Item item) {
+        Set<Item> items = activeItems.get(uuid);
+        if (items != null) {
+            items.remove(item);
+            if (items.isEmpty()) {
+                activeItems.remove(uuid);
+            }
+        }
+    }
+
+    public void cleanupPlayer(UUID uuid) {
+        Set<Item> items = activeItems.remove(uuid);
+        if (items != null) {
+            for (Item item : items) {
+                if (item != null && !item.isDead()) {
+                    item.remove();
+                }
+            }
+        }
+
+        BukkitRunnable task = activePlungeTasks.remove(uuid);
+        if (task != null) {
+            task.cancel();
+        }
+
+        List<List<BlockManager.BlockSnapshot>> events = blockManager.getActiveDiarrheaEvents().remove(uuid);
+        if (events != null) {
+            for (List<BlockManager.BlockSnapshot> snapshots : events) {
+                blockManager.revertBlocks(snapshots);
+            }
+        }
+
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null) {
+            poopingEnabled.remove(player);
+            diarrheaMode.remove(player);
+            plungeMode.remove(player);
+            diarrheaSafeFall.remove(player);
+            if (player.hasPotionEffect(PotionEffectType.SLOW_FALLING)) {
+                player.removePotionEffect(PotionEffectType.SLOW_FALLING);
+            }
+        }
+        diarrheaCooldown.remove(uuid);
+        plungeCooldown.remove(uuid);
+        messageCooldown.remove(uuid);
     }
 }

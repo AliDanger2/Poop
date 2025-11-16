@@ -13,7 +13,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.StringUtil;
 
-import javax.management.Attribute;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -93,7 +92,11 @@ public class CommandManager {
         inv.setItem(5, toggleHopper);
 
         // Toggle Diarrhea
-        ItemStack toggleDiarrhea = new ItemStack(Material.BROWN_DYE);
+        Material diarrheaMaterial = configManager.getDiarrheaItem();
+        if (diarrheaMaterial == Material.AIR) {
+            diarrheaMaterial = Material.BARRIER;
+        }
+        ItemStack toggleDiarrhea = new ItemStack(diarrheaMaterial);
         meta = toggleDiarrhea.getItemMeta();
         meta.setDisplayName(ChatColor.YELLOW + "Toggle Diarrhea");
         meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + (configManager.isDiarrheaEnabled() ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled"), ChatColor.GRAY + "Click to toggle"));
@@ -108,13 +111,25 @@ public class CommandManager {
         setDiarrheaCooldown.setItemMeta(meta);
         inv.setItem(21, setDiarrheaCooldown);
 
+        // Set Diarrhea Item
+        diarrheaMaterial = configManager.getDiarrheaItem();
+        if (diarrheaMaterial == Material.AIR) {
+            diarrheaMaterial = Material.BARRIER;
+        }
+        ItemStack setDiarrheaItem = new ItemStack(diarrheaMaterial);
+        meta = setDiarrheaItem.getItemMeta();
+        meta.setDisplayName(ChatColor.YELLOW + "Set Diarrhea Item");
+        meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + configManager.getDiarrheaItem().name(), ChatColor.GRAY + "Click to enter material in chat"));
+        setDiarrheaItem.setItemMeta(meta);
+        inv.setItem(22, setDiarrheaItem);
+
         // Toggle Diarrhea Safe Fall
         ItemStack toggleSafeFall = new ItemStack(Material.FEATHER);
         meta = toggleSafeFall.getItemMeta();
         meta.setDisplayName(ChatColor.YELLOW + "Toggle Diarrhea Safe Fall");
         meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + (poopManager.hasDiarrheaSafeFall(player) ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled"), ChatColor.GRAY + "Click to toggle"));
         toggleSafeFall.setItemMeta(meta);
-        inv.setItem(22, toggleSafeFall);
+        inv.setItem(23, toggleSafeFall);
 
         // Set Diarrhea Block 1
         Material block1Material = configManager.getDiarrheaBlock1();
@@ -126,7 +141,7 @@ public class CommandManager {
         meta.setDisplayName(ChatColor.YELLOW + "Set Diarrhea Block 1");
         meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + configManager.getDiarrheaBlock1().name(), ChatColor.GRAY + "Click to enter material in chat"));
         setBlock1.setItemMeta(meta);
-        inv.setItem(23, setBlock1);
+        inv.setItem(24, setBlock1);
 
         // Set Diarrhea Block 2
         Material block2Material = configManager.getDiarrheaBlock2();
@@ -138,10 +153,14 @@ public class CommandManager {
         meta.setDisplayName(ChatColor.YELLOW + "Set Diarrhea Block 2");
         meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + configManager.getDiarrheaBlock2().name(), ChatColor.GRAY + "Click to enter material in chat"));
         setBlock2.setItemMeta(meta);
-        inv.setItem(24, setBlock2);
+        inv.setItem(25, setBlock2);
 
         // Toggle Plunge
-        ItemStack togglePlunge = new ItemStack(Material.TRIDENT);
+        Material plungeMaterial = configManager.getPlungeItem();
+        if (plungeMaterial == Material.AIR) {
+            plungeMaterial = Material.BARRIER;
+        }
+        ItemStack togglePlunge = new ItemStack(plungeMaterial);
         meta = togglePlunge.getItemMeta();
         meta.setDisplayName(ChatColor.YELLOW + "Toggle Plunge");
         meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + (configManager.isPlungeEnabled() ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled"), ChatColor.GRAY + "Click to toggle"));
@@ -156,34 +175,45 @@ public class CommandManager {
         setPlungeCooldown.setItemMeta(meta);
         inv.setItem(39, setPlungeCooldown);
 
+        // Set Plunge Item
+        plungeMaterial = configManager.getPlungeItem();
+        if (plungeMaterial == Material.AIR) {
+            plungeMaterial = Material.BARRIER;
+        }
+        ItemStack setPlungeItem = new ItemStack(plungeMaterial);
+        meta = setPlungeItem.getItemMeta();
+        meta.setDisplayName(ChatColor.YELLOW + "Set Plunge Item");
+        meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + configManager.getPlungeItem().name(), ChatColor.GRAY + "Click to enter material in chat"));
+        setPlungeItem.setItemMeta(meta);
+        inv.setItem(40, setPlungeItem);
+
         // Set Plunge Strength
-        ItemStack setPlungeStrength = new ItemStack(Material.REDSTONE);
+        ItemStack setPlungeStrength = new ItemStack(Material.BLAZE_POWDER);
         meta = setPlungeStrength.getItemMeta();
         meta.setDisplayName(ChatColor.YELLOW + "Set Plunge Strength");
         meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + configManager.getPlungeStrength(), ChatColor.GRAY + "Click to enter in chat"));
         setPlungeStrength.setItemMeta(meta);
-        inv.setItem(40, setPlungeStrength);
+        inv.setItem(41, setPlungeStrength);
 
         // Set Plunge Poop Trail
-        ItemStack setPlungePoopTrail = new ItemStack(Material.SLIME_BALL);
+        ItemStack setPlungePoopTrail = new ItemStack(Material.WRITABLE_BOOK);
         meta = setPlungePoopTrail.getItemMeta();
         meta.setDisplayName(ChatColor.YELLOW + "Set Plunge Poop Trail");
         meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + configManager.getPlungePoopTrailExpression(), ChatColor.GRAY + "Click to enter expression in chat"));
         setPlungePoopTrail.setItemMeta(meta);
-        inv.setItem(41, setPlungePoopTrail);
+        inv.setItem(42, setPlungePoopTrail);
 
-        // Fill remaining slots with lime stained-glass panes
-        ItemStack pane = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
-        ItemMeta paneMeta = pane.getItemMeta();
-        paneMeta.setDisplayName(" ");
-        paneMeta.setHideTooltip(true);
-        pane.setItemMeta(paneMeta);
-
-        for (int i = 0; i < 45; i++) {
+        ItemStack filler = new ItemStack(Material.LIME_STAINED_GLASS_PANE, 1, (short) 7);
+        ItemMeta fillerMeta = filler.getItemMeta();
+        fillerMeta.setDisplayName(ChatColor.RESET + "");
+        fillerMeta.setHideTooltip(true);
+        filler.setItemMeta(fillerMeta);
+        for (int i = 0; i < inv.getSize(); i++) {
             if (inv.getItem(i) == null) {
-                inv.setItem(i, pane);
+                inv.setItem(i, filler.clone());
             }
         }
+
         player.openInventory(inv);
     }
 
@@ -191,6 +221,7 @@ public class CommandManager {
         @Override
         public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
             if (!(sender instanceof Player player)) {
+                sender.sendMessage("This command can only be used by players.");
                 return true;
             }
 
@@ -204,111 +235,138 @@ public class CommandManager {
                 return true;
             }
 
-            switch (args[0].toLowerCase()) {
+            String subCommand = args[0].toLowerCase();
+            String perm = "poop.admin." + subCommand;
+
+            if (!player.hasPermission(perm)) {
+                player.sendMessage(ChatColor.RED + "You do not have permission to use this.");
+                return true;
+            }
+
+            switch (subCommand) {
                 case "toggle_poop":
                     boolean newPoopState = !configManager.isPoopEnabled();
                     configManager.setPoopEnabled(newPoopState);
                     player.sendMessage(ChatColor.YELLOW + "Pooping has been " + (newPoopState ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
                     break;
-
                 case "poop_name":
                     if (args.length < 2) {
                         player.sendMessage(ChatColor.YELLOW + "Usage: /pa poop_name <name>");
                         return true;
                     }
-
-                    String newName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-                    configManager.setPoopName(ChatColor.translateAlternateColorCodes('&', newName));
-                    player.sendMessage(ChatColor.GREEN + "Poop item name has been set to: " + configManager.getPoopName());
+                    String newName = ChatColor.translateAlternateColorCodes('&', String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
+                    configManager.setPoopName(newName);
+                    player.sendMessage(ChatColor.GREEN + "Poop item name has been set to: " + newName);
                     break;
-
                 case "poop_item":
-                    if (args.length >= 2) {
-                        String itemName = args[1].toUpperCase();
-                        try {
-                            Material newPoopItem = Material.valueOf(itemName);
-                            configManager.setPoopItem(newPoopItem);
-                            player.sendMessage(ChatColor.GREEN + "Poop item set to " + newPoopItem.name());
-                        } catch (IllegalArgumentException e) {
-                            player.sendMessage(ChatColor.RED + "Invalid item name: " + itemName);
-                        }
-                    } else {
+                    if (args.length < 2) {
                         player.sendMessage(ChatColor.YELLOW + "Usage: /pa poop_item <item>");
+                        return true;
+                    }
+                    String itemName = args[1].toUpperCase();
+                    try {
+                        Material newPoopItem = Material.valueOf(itemName);
+                        configManager.setPoopItem(newPoopItem);
+                        player.sendMessage(ChatColor.GREEN + "Poop item set to " + newPoopItem.name());
+                    } catch (IllegalArgumentException e) {
+                        player.sendMessage(ChatColor.RED + "Invalid item name: " + itemName);
                     }
                     break;
-
                 case "hopper_pickupable":
                     boolean newHopperState = !configManager.isHopperPickupable();
                     configManager.setHopperPickupable(newHopperState);
-                    player.sendMessage(ChatColor.YELLOW + "Hopper pickup has been " +
-                            (newHopperState ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
+                    player.sendMessage(ChatColor.YELLOW + "Hopper pickup has been " + (newHopperState ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
                     break;
-
                 case "toggle_diarrhea":
                     boolean newDiarrheaState = !configManager.isDiarrheaEnabled();
                     configManager.setDiarrheaEnabled(newDiarrheaState);
                     player.sendMessage(ChatColor.YELLOW + "Diarrhea has been " + (newDiarrheaState ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
                     break;
-
                 case "diarrhea_cooldown":
                     if (args.length < 2) {
                         player.sendMessage(ChatColor.YELLOW + "Usage: /pa diarrhea_cooldown <seconds>");
                         return true;
                     }
-
                     try {
                         int newCooldown = Integer.parseInt(args[1]);
                         if (newCooldown < 7) {
                             player.sendMessage(ChatColor.RED + "WARNING! " + ChatColor.YELLOW +
                                     "If the cooldown is less than 7 seconds many issues will happen such as blocks not reverting back normally and more so be sure of what you're doing! " +
-                                    "If you want to proceed write /pa confirm in the chat.");
+                                    "Type 'confirm' in chat to proceed.");
                             pendingCooldowns.put(player.getUniqueId(), newCooldown);
+                            pendingInputs.put(player.getUniqueId(), "confirm_diarrhea_cooldown");
                         } else {
                             configManager.setMaxDiarrheaCooldown(newCooldown);
                             player.sendMessage(ChatColor.GREEN + "Diarrhea cooldown has been set to " + newCooldown + " seconds.");
                         }
                     } catch (NumberFormatException e) {
-                        player.sendMessage(ChatColor.RED + "Please enter a valid number.");
+                        player.sendMessage(ChatColor.RED + "Invalid number.");
                     }
                     break;
-
                 case "diarrhea_safe_fall":
                     poopManager.toggleDiarrheaSafeFall(player);
-                    boolean isEnabled = poopManager.hasDiarrheaSafeFall(player);
-                    player.sendMessage(ChatColor.YELLOW + "Diarrhea safe fall has been " +
-                            (isEnabled ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
+                    boolean newSafeFallState = poopManager.hasDiarrheaSafeFall(player);
+                    player.sendMessage(ChatColor.YELLOW + "Diarrhea safe fall has been " + (newSafeFallState ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
                     break;
-
+                case "diarrhea_block1":
+                    if (args.length < 2) {
+                        player.sendMessage(ChatColor.YELLOW + "Usage: /pa diarrhea_block1 <block>");
+                        return true;
+                    }
+                    configManager.setDiarrheaBlock("diarrhea-block1", args[1]);
+                    player.sendMessage(ChatColor.GREEN + "Block for diarrhea-block1 has been set to " + args[1].toUpperCase());
+                    break;
+                case "diarrhea_block2":
+                    if (args.length < 2) {
+                        player.sendMessage(ChatColor.YELLOW + "Usage: /pa diarrhea_block2 <block>");
+                        return true;
+                    }
+                    configManager.setDiarrheaBlock("diarrhea-block2", args[1]);
+                    player.sendMessage(ChatColor.GREEN + "Block for diarrhea-block2 has been set to " + args[1].toUpperCase());
+                    break;
+                case "diarrhea_item":
+                    if (args.length < 2) {
+                        player.sendMessage(ChatColor.YELLOW + "Usage: /pa diarrhea_item <item>");
+                        return true;
+                    }
+                    String diarrheaItemName = args[1].toUpperCase();
+                    try {
+                        Material newDiarrheaItem = Material.valueOf(diarrheaItemName);
+                        configManager.setDiarrheaItem(newDiarrheaItem);
+                        player.sendMessage(ChatColor.GREEN + "Diarrhea item set to " + newDiarrheaItem.name());
+                    } catch (IllegalArgumentException e) {
+                        player.sendMessage(ChatColor.RED + "Invalid item name: " + diarrheaItemName);
+                    }
+                    break;
                 case "toggle_plunge":
                     boolean newPlungeState = !configManager.isPlungeEnabled();
                     configManager.setPlungeEnabled(newPlungeState);
                     player.sendMessage(ChatColor.YELLOW + "Plunge has been " + (newPlungeState ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
                     break;
-
                 case "plunge_cooldown":
                     if (args.length < 2) {
                         player.sendMessage(ChatColor.YELLOW + "Usage: /pa plunge_cooldown <seconds>");
                         return true;
                     }
                     try {
-                        int newCooldown = Integer.parseInt(args[1]);
-                        if (newCooldown < 7) {
+                        int newPlungeCooldown = Integer.parseInt(args[1]);
+                        if (newPlungeCooldown < 7) {
                             player.sendMessage(ChatColor.RED + "WARNING! " + ChatColor.YELLOW +
                                     "If the cooldown is less than 7 seconds many issues will happen such as lag and many other things so be sure of what you're doing! " +
-                                    "If you want to proceed write /pa confirm in the chat.");
-                            pendingPlungeCooldowns.put(player.getUniqueId(), newCooldown);
+                                    "Type 'confirm' in chat to proceed.");
+                            pendingPlungeCooldowns.put(player.getUniqueId(), newPlungeCooldown);
+                            pendingInputs.put(player.getUniqueId(), "confirm_plunge_cooldown");
                         } else {
-                            configManager.setMaxPlungeCooldown(newCooldown);
-                            player.sendMessage(ChatColor.GREEN + "Plunge cooldown has been set to " + newCooldown + " seconds.");
+                            configManager.setMaxPlungeCooldown(newPlungeCooldown);
+                            player.sendMessage(ChatColor.GREEN + "Plunge cooldown has been set to " + newPlungeCooldown + " seconds.");
                         }
                     } catch (NumberFormatException e) {
-                        player.sendMessage(ChatColor.RED + "Please enter a valid number.");
+                        player.sendMessage(ChatColor.RED + "Invalid number.");
                     }
                     break;
-
                 case "plunge_strength":
                     if (args.length < 2) {
-                        player.sendMessage(ChatColor.YELLOW + "Usage: /pa plunge_strength <value>");
+                        player.sendMessage(ChatColor.YELLOW + "Usage: /pa plunge_strength <strength>");
                         return true;
                     }
                     try {
@@ -316,10 +374,9 @@ public class CommandManager {
                         configManager.setPlungeStrength(newStrength);
                         player.sendMessage(ChatColor.GREEN + "Plunge strength has been set to " + newStrength);
                     } catch (NumberFormatException e) {
-                        player.sendMessage(ChatColor.RED + "Please enter a valid number.");
+                        player.sendMessage(ChatColor.RED + "Invalid number.");
                     }
                     break;
-
                 case "plunge_poop_trail":
                     if (args.length < 2) {
                         player.sendMessage(ChatColor.YELLOW + "Usage: /pa plunge_poop_trail <expression>");
@@ -329,43 +386,35 @@ public class CommandManager {
                     configManager.setPlungePoopTrailExpression(expression);
                     player.sendMessage(ChatColor.GREEN + "Plunge poop trail expression has been set to " + expression);
                     break;
-
-                case "diarrhea_block1":
+                case "plunge_item":
                     if (args.length < 2) {
-                        player.sendMessage(ChatColor.YELLOW + "Usage: /pa diarrhea_block1 <block>");
+                        player.sendMessage(ChatColor.YELLOW + "Usage: /pa plunge_item <item>");
                         return true;
                     }
-                    configManager.setDiarrheaBlock("diarrhea-block1", args[1]);
-                    player.sendMessage(ChatColor.GREEN + "Block for diarrhea-block1 has been set to " + args[1].toUpperCase());
-                    break;
-
-                case "diarrhea_block2":
-                    if (args.length < 2) {
-                        player.sendMessage(ChatColor.YELLOW + "Usage: /pa diarrhea_block2 <block>");
-                        return true;
+                    String plungeItemName = args[1].toUpperCase();
+                    try {
+                        Material newPlungeItem = Material.valueOf(plungeItemName);
+                        configManager.setPlungeItem(newPlungeItem);
+                        player.sendMessage(ChatColor.GREEN + "Plunge item set to " + newPlungeItem.name());
+                    } catch (IllegalArgumentException e) {
+                        player.sendMessage(ChatColor.RED + "Invalid item name: " + plungeItemName);
                     }
-                    configManager.setDiarrheaBlock("diarrhea-block2", args[1]);
-                    player.sendMessage(ChatColor.GREEN + "Block for diarrhea-block2 has been set to " + args[1].toUpperCase());
                     break;
-
                 case "confirm":
                     if (pendingCooldowns.containsKey(player.getUniqueId())) {
-                        int cooldown = pendingCooldowns.get(player.getUniqueId());
+                        int cooldown = pendingCooldowns.remove(player.getUniqueId());
                         configManager.setMaxDiarrheaCooldown(cooldown);
                         player.sendMessage(ChatColor.GREEN + "Diarrhea cooldown has been set to " + cooldown + " seconds.");
-                        pendingCooldowns.remove(player.getUniqueId());
                     } else if (pendingPlungeCooldowns.containsKey(player.getUniqueId())) {
-                        int cooldown = pendingPlungeCooldowns.get(player.getUniqueId());
+                        int cooldown = pendingPlungeCooldowns.remove(player.getUniqueId());
                         configManager.setMaxPlungeCooldown(cooldown);
                         player.sendMessage(ChatColor.GREEN + "Plunge cooldown has been set to " + cooldown + " seconds.");
-                        pendingPlungeCooldowns.remove(player.getUniqueId());
                     } else {
                         player.sendMessage(ChatColor.RED + "There is no pending cooldown change to confirm.");
                     }
-                    return true;
-
+                    break;
                 default:
-                    player.sendMessage(ChatColor.YELLOW + "Usage: /pa <toggle_poop | poop_item | poop_name | hopper_pickupable | toggle_diarrhea | diarrhea_cooldown | diarrhea_safe_fall | toggle_plunge | plunge_cooldown | plunge_strength | diarrhea_block1 | diarrhea_block2>");
+                    player.sendMessage(ChatColor.YELLOW + "Unknown subcommand. Use the GUI or check tab complete.");
                     break;
             }
             return true;
@@ -374,15 +423,20 @@ public class CommandManager {
         @Override
         public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
             if (args.length == 1) {
-                return StringUtil.copyPartialMatches(args[0], Arrays.asList(
-                        "toggle_poop", "poop_item", "poop_name", "hopper_pickupable",
+                List<String> subs = Arrays.asList(
+                        "toggle_poop", "poop_name", "poop_item", "hopper_pickupable",
                         "toggle_diarrhea", "diarrhea_cooldown", "diarrhea_safe_fall",
-                        "toggle_plunge", "plunge_cooldown", "plunge_strength", "plunge_poop_trail",
-                        "diarrhea_block1", "diarrhea_block2", "confirm"
-                ), new ArrayList<>());
-            } else if (args.length == 2 && (args[0].equalsIgnoreCase("diarrhea_block1") ||
-                    args[0].equalsIgnoreCase("diarrhea_block2") || args[0].equalsIgnoreCase("poop_item"))) {
-                return StringUtil.copyPartialMatches(args[1], getMaterialNames(), new ArrayList<>());
+                        "diarrhea_block1", "diarrhea_block2", "diarrhea_item",
+                        "toggle_plunge", "plunge_cooldown", "plunge_strength", "plunge_poop_trail", "plunge_item",
+                        "confirm"
+                );
+                return StringUtil.copyPartialMatches(args[0], subs, new ArrayList<>());
+            } else if (args.length == 2) {
+                String sub = args[0].toLowerCase();
+                if (sub.equals("poop_item") || sub.equals("diarrhea_item") || sub.equals("plunge_item") ||
+                        sub.equals("diarrhea_block1") || sub.equals("diarrhea_block2")) {
+                    return StringUtil.copyPartialMatches(args[1], getMaterialNames(), new ArrayList<>());
+                }
             }
             return new ArrayList<>();
         }
@@ -407,6 +461,7 @@ public class CommandManager {
         }
     }
 
+    // The rest of your command classes remain 100% unchanged
     private class PoopCommand implements TabExecutor {
         @Override
         public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -457,7 +512,6 @@ public class CommandManager {
         public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
             if (sender instanceof Player player) {
                 int page = 1;
-
                 if (args.length > 0) {
                     try {
                         page = Math.max(1, Integer.parseInt(args[0]));
@@ -466,7 +520,6 @@ public class CommandManager {
                         return true;
                     }
                 }
-
                 dataManager.showLeaderboard(player, page);
                 return true;
             }

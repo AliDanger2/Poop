@@ -9,10 +9,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -42,13 +39,16 @@ public class EventManager implements Listener {
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        poopManager.cleanupPlayer(player.getUniqueId());
     }
 
     @EventHandler
     public void onHopperPickup(InventoryPickupItemEvent event) {
         if (!configManager.isHopperPickupable()) {
-            if (event.getItem().getItemStack().getType() == configManager.getPoopItem()) {
+            Material type = event.getItem().getItemStack().getType();
+            if (type == configManager.getPoopItem() || type == configManager.getDiarrheaItem() || type == configManager.getPlungeItem()) {
                 event.setCancelled(true);
             }
         }
@@ -95,15 +95,17 @@ public class EventManager implements Listener {
             Inventory inv = event.getInventory();
             int slot = event.getSlot();
             String yellow = ChatColor.YELLOW.toString();
+
             if (displayName.equals(yellow + "Toggle Poop")) {
+                if (!player.hasPermission("poop.admin.toggle_poop")) {
+                    player.sendMessage(ChatColor.RED + "You do not have permission to use this.");
+                    return;
+                }
                 boolean newPoopState = !configManager.isPoopEnabled();
                 configManager.setPoopEnabled(newPoopState);
                 player.sendMessage(ChatColor.YELLOW + "Pooping has been " + (newPoopState ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
-                // Update item
                 Material poopMaterial = configManager.getPoopItem();
-                if (poopMaterial == Material.AIR) {
-                    poopMaterial = Material.BARRIER;
-                }
+                if (poopMaterial == Material.AIR) poopMaterial = Material.BARRIER;
                 ItemStack updatedItem = new ItemStack(poopMaterial);
                 ItemMeta meta = updatedItem.getItemMeta();
                 meta.setDisplayName(ChatColor.YELLOW + "Toggle Poop");
@@ -111,10 +113,13 @@ public class EventManager implements Listener {
                 updatedItem.setItemMeta(meta);
                 inv.setItem(slot, updatedItem);
             } else if (displayName.equals(yellow + "Toggle Hopper Pickupable")) {
+                if (!player.hasPermission("poop.admin.hopper_pickupable")) {
+                    player.sendMessage(ChatColor.RED + "You do not have permission to use this.");
+                    return;
+                }
                 boolean newHopperState = !configManager.isHopperPickupable();
                 configManager.setHopperPickupable(newHopperState);
                 player.sendMessage(ChatColor.YELLOW + "Hopper pickup has been " + (newHopperState ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
-                // Update item
                 ItemStack updatedItem = new ItemStack(Material.HOPPER);
                 ItemMeta meta = updatedItem.getItemMeta();
                 meta.setDisplayName(ChatColor.YELLOW + "Toggle Hopper Pickupable");
@@ -122,41 +127,59 @@ public class EventManager implements Listener {
                 updatedItem.setItemMeta(meta);
                 inv.setItem(slot, updatedItem);
             } else if (displayName.equals(yellow + "Toggle Diarrhea")) {
+                if (!player.hasPermission("poop.admin.toggle_diarrhea")) {
+                    player.sendMessage(ChatColor.RED + "You do not have permission to use this.");
+                    return;
+                }
                 boolean newDiarrheaState = !configManager.isDiarrheaEnabled();
                 configManager.setDiarrheaEnabled(newDiarrheaState);
                 player.sendMessage(ChatColor.YELLOW + "Diarrhea has been " + (newDiarrheaState ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
-                // Update item
-                ItemStack updatedItem = new ItemStack(Material.BROWN_DYE);
+                Material diarrheaMaterial = configManager.getDiarrheaItem();
+                if (diarrheaMaterial == Material.AIR) diarrheaMaterial = Material.BARRIER;
+                ItemStack updatedItem = new ItemStack(diarrheaMaterial);
                 ItemMeta meta = updatedItem.getItemMeta();
                 meta.setDisplayName(ChatColor.YELLOW + "Toggle Diarrhea");
                 meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + (newDiarrheaState ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled"), ChatColor.GRAY + "Click to toggle"));
                 updatedItem.setItemMeta(meta);
                 inv.setItem(slot, updatedItem);
             } else if (displayName.equals(yellow + "Toggle Diarrhea Safe Fall")) {
+                if (!player.hasPermission("poop.admin.diarrhea_safe_fall")) {
+                    player.sendMessage(ChatColor.RED + "You do not have permission to use this.");
+                    return;
+                }
                 poopManager.toggleDiarrheaSafeFall(player);
-                boolean isEnabled = poopManager.hasDiarrheaSafeFall(player);
-                player.sendMessage(ChatColor.YELLOW + "Diarrhea safe fall has been " + (isEnabled ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
-                // Update item
+                boolean newSafeFallState = poopManager.hasDiarrheaSafeFall(player);
+                player.sendMessage(ChatColor.YELLOW + "Diarrhea safe fall has been " + (newSafeFallState ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
                 ItemStack updatedItem = new ItemStack(Material.FEATHER);
                 ItemMeta meta = updatedItem.getItemMeta();
                 meta.setDisplayName(ChatColor.YELLOW + "Toggle Diarrhea Safe Fall");
-                meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + (isEnabled ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled"), ChatColor.GRAY + "Click to toggle"));
+                meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + (newSafeFallState ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled"), ChatColor.GRAY + "Click to toggle"));
                 updatedItem.setItemMeta(meta);
                 inv.setItem(slot, updatedItem);
             } else if (displayName.equals(yellow + "Toggle Plunge")) {
+                if (!player.hasPermission("poop.admin.toggle_plunge")) {
+                    player.sendMessage(ChatColor.RED + "You do not have permission to use this.");
+                    return;
+                }
                 boolean newPlungeState = !configManager.isPlungeEnabled();
                 configManager.setPlungeEnabled(newPlungeState);
                 player.sendMessage(ChatColor.YELLOW + "Plunge has been " + (newPlungeState ? ChatColor.GREEN + "enabled." : ChatColor.RED + "disabled."));
-                // Update item
-                ItemStack updatedItem = new ItemStack(Material.TRIDENT);
+                Material plungeMaterial = configManager.getPlungeItem();
+                if (plungeMaterial == Material.AIR) plungeMaterial = Material.BARRIER;
+                ItemStack updatedItem = new ItemStack(plungeMaterial);
                 ItemMeta meta = updatedItem.getItemMeta();
                 meta.setDisplayName(ChatColor.YELLOW + "Toggle Plunge");
                 meta.setLore(Arrays.asList(ChatColor.GRAY + "Current: " + (newPlungeState ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled"), ChatColor.GRAY + "Click to toggle"));
                 updatedItem.setItemMeta(meta);
                 inv.setItem(slot, updatedItem);
             } else if (displayName.startsWith(yellow + "Set ")) {
-                player.closeInventory();
                 String inputType = displayName.substring(yellow.length() + 4).toLowerCase().replace(" ", "_");
+                String permission = "poop.admin." + inputType;
+                if (!player.hasPermission(permission)) {
+                    player.sendMessage(ChatColor.RED + "You do not have permission to use this.");
+                    return;
+                }
+                player.closeInventory();
                 commandManager.pendingInputs.put(player.getUniqueId(), inputType);
                 player.sendMessage(ChatColor.YELLOW + "Enter the new value for '" + inputType.replace("_", " ") + "' in chat (or 'cancel' to abort):");
             }
@@ -170,7 +193,7 @@ public class EventManager implements Listener {
         String input = event.getMessage().trim();
         if (commandManager.pendingInputs.containsKey(uuid)) {
             String type = commandManager.pendingInputs.remove(uuid);
-            event.setCancelled(true); // Prevent broadcasting the input
+            event.setCancelled(true);
             if (input.equalsIgnoreCase("cancel")) {
                 player.sendMessage(ChatColor.RED + "Input cancelled.");
                 return;
@@ -229,6 +252,16 @@ public class EventManager implements Listener {
                     case "diarrhea_block_2":
                         configManager.setDiarrheaBlock("diarrhea-block2", input);
                         player.sendMessage(ChatColor.GREEN + "Block for diarrhea-block2 has been set to " + input.toUpperCase());
+                        break;
+                    case "diarrhea_item":
+                        Material newDiarrheaItem = Material.valueOf(input.toUpperCase());
+                        configManager.setDiarrheaItem(newDiarrheaItem);
+                        player.sendMessage(ChatColor.GREEN + "Diarrhea item has been set to " + newDiarrheaItem.name());
+                        break;
+                    case "plunge_item":
+                        Material newPlungeItem = Material.valueOf(input.toUpperCase());
+                        configManager.setPlungeItem(newPlungeItem);
+                        player.sendMessage(ChatColor.GREEN + "Plunge item has been set to " + newPlungeItem.name());
                         break;
                 }
             } catch (NumberFormatException e) {

@@ -47,6 +47,10 @@ public class Poop extends JavaPlugin implements Listener {
         Player player = event.getPlayer();
         Collection<String> commands = event.getCommands();
 
+        if (player.hasPermission("poop.*")) {
+            return;
+        }
+
         if (!player.hasPermission("poop.poop")) {
             commands.remove("poop");
         }

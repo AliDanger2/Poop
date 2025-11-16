@@ -22,6 +22,9 @@ public class ConfigManager {
     private boolean plungeEnabled;
     private String plungePoopTrailExpression;
 
+    private Material diarrheaItem;
+    private Material plungeItem;
+
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
         this.config = plugin.getConfig();
@@ -31,6 +34,9 @@ public class ConfigManager {
         plugin.saveDefaultConfig();
         initializeDefaultDiarrheaBlocks();
         initializeDefaultPlungePoopTrail();
+
+        initializeDefaultDiarrheaItem();
+        initializeDefaultPlungeItem();
 
         poopName = ChatColor.translateAlternateColorCodes('&', config.getString("poop-name", "Poop"));
         hopperPickupable = config.getBoolean("hopper-pickupable", true);
@@ -52,6 +58,9 @@ public class ConfigManager {
 
         diarrheaBlock1 = getConfigMaterial("diarrhea-block1", Material.BROWN_CONCRETE);
         diarrheaBlock2 = getConfigMaterial("diarrhea-block2", Material.BROWN_WOOL);
+
+        diarrheaItem = getConfigMaterial("diarrhea-item", Material.BROWN_DYE);
+        plungeItem = getConfigMaterial("plunge-item", Material.BROWN_DYE);
     }
 
     private void initializeDefaultDiarrheaBlocks() {
@@ -67,6 +76,20 @@ public class ConfigManager {
     private void initializeDefaultPlungePoopTrail() {
         if (!config.contains("plunge-poop-trail")) {
             config.set("plunge-poop-trail", "5 * strength");
+            plugin.saveConfig();
+        }
+    }
+
+    private void initializeDefaultDiarrheaItem() {
+        if (!config.contains("diarrhea-item")) {
+            config.set("diarrhea-item", Material.BROWN_DYE.name());
+            plugin.saveConfig();
+        }
+    }
+
+    private void initializeDefaultPlungeItem() {
+        if (!config.contains("plunge-item")) {
+            config.set("plunge-item", Material.BROWN_DYE.name());
             plugin.saveConfig();
         }
     }
@@ -109,6 +132,9 @@ public class ConfigManager {
     public boolean isPlungeEnabled() { return plungeEnabled; }
     public String getPlungePoopTrailExpression() { return plungePoopTrailExpression; }
 
+    public Material getDiarrheaItem() { return diarrheaItem; }
+    public Material getPlungeItem() { return plungeItem; }
+
     public void setPoopName(String poopName) {
         this.poopName = poopName;
         config.set("poop-name", ChatColor.stripColor(poopName));
@@ -147,4 +173,15 @@ public class ConfigManager {
     public void setPoopEnabled(boolean poopEnabled) { this.poopEnabled = poopEnabled; }
     public void setDiarrheaEnabled(boolean diarrheaEnabled) { this.diarrheaEnabled = diarrheaEnabled; }
     public void setPlungeEnabled(boolean plungeEnabled) { this.plungeEnabled = plungeEnabled; }
+
+    public void setDiarrheaItem(Material diarrheaItem) {
+        this.diarrheaItem = diarrheaItem;
+        config.set("diarrhea-item", diarrheaItem.name());
+        plugin.saveConfig();
+    }
+    public void setPlungeItem(Material plungeItem) {
+        this.plungeItem = plungeItem;
+        config.set("plunge-item", plungeItem.name());
+        plugin.saveConfig();
+    }
 }
