@@ -85,7 +85,7 @@ Check out more of my work on GitHub!
 
 <p align="center">
   <span style="color:#aaaaaa;"><i>Lightweight. Funny. Open-source.<br>
-  Add some **shitty** fun to your Minecraft server today!</i></span>
+  Add some <b>shitty</b> fun to your Minecraft server today!</i></span>
 </p>
 
 ---
